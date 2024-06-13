@@ -1,0 +1,54 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "ZjAdmin.Account";
+option java_multiple_files = true;
+option java_package = "ZjAdmin.Account";
+
+package ZjAdmin.Account;
+
+//专机账号管理
+message AccountInfo {
+  string username = 1;
+  string password = 2;
+}
+
+//获取账号列表 请求
+message AccountListRequest {
+  int32 zjId =1;
+}
+
+//获取账号列表 响应
+message AccountListReply {
+  int32 code = 1;
+  string msg = 2;
+  int32 count = 3;
+  repeated AccountInfo accounts = 4;
+}
+
+//获取账号信息 请求
+message AccountGetRequest {
+  int32 zjId =1;				// 不指定，传0
+  string username = 2;
+}
+
+//获取账号信息 响应
+message AccountGetReply {
+  int32 code = 1;
+  string msg = 2;;
+  AccountInfo account = 3;
+}
+
+//设置账号信息 请求
+message AccountSetRequest {
+  int32 zjId =1;				// 不指定，传0
+  string username = 2;
+  string password = 3;
+  string group = 4;
+}
+
+//设置账号信息 响应
+message AccountSetReply {
+  int32 code = 1;
+  string msg = 2;
+  AccountInfo account = 3;
+}

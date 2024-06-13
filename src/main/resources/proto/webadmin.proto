@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+option csharp_namespace = "ZjAdmin.WebAdmin";
+
+
+option java_multiple_files = true;
+option java_package = "ZjAdmin.WebAdmin";
+option java_outer_classname = "ZjWebAdminClass";
+
+package ZjAdmin.WebAdmin;
+
+import "file.proto";
+import "account.proto";
+
+service WebAdminService {
+
+  //登录认证
+  rpc Login (LoginRequest) returns (LoginReply);
+
+  //不针对单个ZjClient的接口
+  rpc GetZjList (ZjListRequest) returns (ZjListReply);
+
+  //针对单个ZjClient管理的接口
+  rpc GetAccountInfo(ZjAdmin.Account.AccountGetRequest) returns (ZjAdmin.Account.AccountGetReply);
+  rpc GetAccountList (ZjAdmin.Account.AccountListRequest) returns (ZjAdmin.Account.AccountListReply);
+  rpc CreateAccount (ZjAdmin.Account.AccountSetRequest) returns (ZjAdmin.Account.AccountSetReply);
+  rpc DownloadFile (ZjAdmin.File.DownloadFileRequest) returns (ZjAdmin.File.DownloadFileReply);
+  rpc DeleteFile(ZjAdmin.File.DeleteFileRequest) returns (ZjAdmin.File.DeleteFileReply);
+}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginReply {
+  int32 code = 1;
+  string msg = 2;
+  string data = 3;
+}
+
+message ZjInfo {
+  int32 id = 1;
+  bool online = 2;
+  string ip=3;
+  int32 port=4;
+}
+
+message ZjListRequest {
+  bool onlyOnline = 1;
+  bool onlyOffline = 2;
+}
+
+message ZjListReply {
+  int32 code = 1;
+  string msg = 2;
+  int32 count = 3;
+  repeated ZjInfo zjList = 4;
+}

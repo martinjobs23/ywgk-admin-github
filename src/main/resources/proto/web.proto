@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.ceit.grpc";
+option java_outer_classname = "WebProto";
+option objc_class_prefix = "HLW";
+
+package web;
+
+service Web {
+  rpc DevRegisterCheck (DevRegisterRequest) returns (DevRegisterReply) {}
+  rpc DevUnRegister (DevUnRegisterRequest) returns (DevUnRegisterReply) {}
+  rpc fileDetailByType (FileDetailRequestByType) returns (FileDetailRespone) {}
+  rpc fileDetailByName (FileDetailRequestByName) returns (FileDetailRespone) {}
+  rpc softwareRegister (UploadRequest) returns (UploadRespond){}
+  rpc softwareDistribute (SoftwareDistributeRequest) returns (SoftwareDistributeResponse){}
+  rpc softwareAutoDistribute (SoftwareAutoDistribute) returns (SoftwareDistributeResponse) {}
+}
+
+message DevRegisterRequest {
+  int32 is_handle = 1;
+  string serial = 2;
+  string dev_name = 3;
+  string org_id = 4;
+  string device_ip = 5;
+  string device_mac = 6;
+}
+
+message DevRegisterReply {
+  string msg = 1;
+  int32 code = 2;
+  string data = 3;
+}
+
+message DevUnRegisterRequest {
+  string username = 1;
+  string devica_mac = 2;
+}
+
+message DevUnRegisterReply {
+  string msg = 1;
+  int32 code = 2;
+  string data = 3;
+}
+
+message FileDetailRequestByType{
+  int32 type = 1;
+}
+
+message FileDetailRequestByName{
+  string name = 1;
+}
+
+message FileDetailRespone{
+  repeated  OneFileDetail detaillist = 1;
+  int32 count = 2;
+}
+message OneFileDetail{
+  string filename = 1;
+  string image = 7;
+  string desc = 2;
+  string size = 3;
+  string url = 4;
+  string hash = 5;
+  string org = 6;
+}
+
+message UploadRequest{
+  string hash = 1;
+}
+
+message UploadRespond{
+  //repeated  OneFileDetail detaillist = 1;
+  int32 code = 1;
+  string msg = 2;
+  string data = 3;
+}
+message SoftwareDistributeRequest{
+  string sw_hash = 1;
+  string sw_url = 2;
+  repeated IpDetail iplist = 3;
+}
+message SoftwareAutoDistribute{
+  string sw_hash=1;
+}
+message IpDetail{
+  string ip = 1;
+}
+message SoftwareDistributeResponse{
+  int32 code = 1;
+  string msg = 2;
+  string data = 3;
+}

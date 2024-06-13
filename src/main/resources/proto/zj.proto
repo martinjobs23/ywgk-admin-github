@@ -1,0 +1,45 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "ZjAdmin";
+
+option java_multiple_files = true;
+option java_package = "ZjAdmin";
+
+package ZjAdmin;
+
+//专机基本注册和管理
+service ZjService {
+  rpc Register (RegisterRequest) returns (RegisterReply);
+  rpc Bothway(stream BothwayMessage) returns(stream BothwayMessage);
+}
+
+//专机注册请求
+message RegisterRequest {
+  string os = 1;
+  string mac = 2;
+}
+
+//专机注册响应
+message RegisterReply {
+  int32 code = 1;
+  string msg = 2;
+  int32 zjId = 3;
+}
+
+//心跳数据包
+message HeartbeatPing {
+  int64 timestamp =1;
+}
+
+message HeartbeatPong {
+  int64 timestamp =1;
+}
+
+//双向数据流接口
+message BothwayMessage{
+	uint64 id = 1;
+	bool isReply = 2;
+	bool needReply =3;
+	string typeName = 4;
+	bytes data = 5;
+}

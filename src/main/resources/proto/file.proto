@@ -1,0 +1,83 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "ZjAdmin.File";
+
+option java_multiple_files = true;
+option java_package = "ZjAdmin.File";
+
+package ZjAdmin.File;
+
+service UploadService {
+  rpc StartUpload(StartUploadRequest) returns(StartUploadReply);
+  rpc UploadData(stream UploadDataMessage) returns(UploadDataReply);
+}
+
+message DownloadFileRequest {
+  int32 zjId =1;				// 不指定，传0
+  string orderId =2;		//
+  string orderName =3;      //
+
+  string targetIp = 4;     //目标设备ip
+  int32 targetPort = 5;      //目标设备ssh端口
+  string targetUser = 6;   //目标设备用户名
+  string targetPass = 7;   //目标设备密码
+  string fileDir = 8;      //待审核文件目录 /root
+  string fileNames = 9;    //待审核文件名   a.txt\nb.txt 或者 a.txt/b.txt
+  string zipPass=10;       //压缩密码
+  string zipDir=11;       //压缩文件NAS保存路径
+
+  string accountName = 12;	//审核专机审核人员账号
+}
+
+message DownloadFileReply {
+  int32 code = 1;
+  string msg = 2;
+  string data = 3;
+}
+
+//开始传输文件
+message StartUploadRequest{
+  int32 zjId =1;				// 不指定，传0
+  string orderId=2;	   //  
+  string zipPass=3;        //压缩密码
+  int64 fileSize = 4;      //文件大小
+  string fileHash = 5;      //文件MD5
+}
+
+message StartUploadReply{
+  int32 code = 1;
+  string msg = 2;
+  int32 zjId = 3;
+  string orderId= 4;	   //  
+  int64 uploadId = 5;      //文件上传请求Id
+}
+
+//文件数据流
+message UploadDataMessage{
+  int64 uploadId = 1;	 //文件上传请求Id
+  bytes blockBytes =2;   //数据块
+}
+
+message UploadDataReply{
+  int32 code = 1;
+  string msg = 2;
+}
+
+//文件下载结果，写到数据库中xx表xx字段
+/*
+表  download_request_qyjgd
+字段
+*/
+
+message DeleteFileRequest {
+  int32 zjId =1;				// 不指定，传0
+  string orderId =2;
+  string orderName = 3;
+  string accountName = 4;
+}
+
+message DeleteFileReply {
+  int32 code = 1;
+  string msg = 2;
+  string data = 3;
+}

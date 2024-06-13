@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.ceit.grpc";
+option java_outer_classname = "DeviceProto";
+option objc_class_prefix = "HLW";
+
+package device;
+
+service Device {
+  rpc HardwareCheck (HardwareCheckRequest) returns (HardwareCheckReply) {}
+}
+
+message HardwareCheckRequest {
+  string hashcode = 1;
+}
+
+message HardwareCheckReply {
+  int32 status = 1;
+  string result = 2;
+}
