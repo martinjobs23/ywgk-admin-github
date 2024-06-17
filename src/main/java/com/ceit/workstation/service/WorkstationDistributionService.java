@@ -106,12 +106,10 @@ public class WorkstationDistributionService {
                     " value (?,?,?,?,?,?,?,?,?,?,?,?)";
             int res = simpleJDBC.update(sql,freelist.get(randomNumber+i).get("id"),freelist.get(randomNumber+i).get("name"),messageUtil.getOrder_id(),
                     num,orderUtilList.get(i).getOperator_id(), name,location, startTime,endTime,"1",LocalDateTime.now(),pwd);
-            //GRPC通信
-            ZjWebAdminClient zjWebAdminClient = new ZjWebAdminClient();
-            //zjWebAdminClient.setConfig();
-            Result r = zjWebAdminClient.createAccount((Integer) freelist.get(randomNumber+i).get("id"),orderUtilList.get(i).getOperator_name(),pwd);
-            if(r.getData() == freelist.get(randomNumber+i).get("id") && res != 0) {
-//            if(res!=0){
+            //GRPC通信，action为1，添加
+            Result r = sendMessageToZjServer(1,(Integer) freelist.get(randomNumber+i).get("id"),orderUtilList.get(i).getOperator_name(),pwd,String.valueOf(startTime),String.valueOf(endTime));
+            if(r.getCode() != 200) return r;
+            if(res!=0){
                 maintenanceRecord("assignAfterApproval",  freelist.get(randomNumber+i).get("id").toString(),messageUtil.getOrder_id(), orderUtilList.get(i).getOperator_id());
                 /**空余位置！未来用于接入短信平台
                  *
@@ -121,7 +119,7 @@ public class WorkstationDistributionService {
         }
         messageUtil.setOperatorList(orderUtilList);
         if (sum != num){
-            return new Result(200,"写入数据库失败或与专机服务端通信失败",messageUtil);
+            return new Result(200,"写入数据库失败",messageUtil);
         }
         return new Result(200,"success",messageUtil);
     }
@@ -132,9 +130,12 @@ public class WorkstationDistributionService {
         String pwd = reqBody.get("workstation_password").toString();
         String sql = "update workstation_order set workstation_password=?,time=? where id=?";
         int res = simpleJDBC.update(sql, pwd, LocalDateTime.now(), id);
+        sql = "select workstation_order.*, bss_order.order_num,bss_order.order_name,name from workstation_order left join bss_order on workstation_order.order_id = bss_order.order_id left join workstation_info on workstation_order.workstation_id = workstation_info.id where workstation_order.id = ?";
+        Map<String,Object> map = simpleJDBC.selectForMap(sql,id);
+        //GRPC通信，action为2，添加
+        Result r = sendMessageToZjServer(2, Integer.parseInt(map.get("workstation_id").toString()),map.get("operator_name").toString(),pwd,map.get("start_time").toString(),map.get("end_time").toString());
+        if(r.getCode() != 200) return r;
         if(res!=0){
-            sql = "select * from workstation_order where id = ?";
-            Map<String,Object> map = simpleJDBC.selectForMap(sql,id);
             maintenanceRecord("changePassword",map.get("workstation_id").toString(),map.get("order_id").toString(),map.get("operator_id").toString());
             return  new Result(200,"success","密码修改成功");
         }
@@ -146,12 +147,18 @@ public class WorkstationDistributionService {
         String new_id = reqBody.get("freeworkstationlist1").toString();
 //        String sql = "select name from workstation_info where id = ?";
 //        String workstation_name = simpleJDBC.selectForOneString(sql,new_id);
-        String sql = "update workstation_order set workstation_id=?,time=? where id=?";
+        String sql = "select workstation_order.*, bss_order.order_num,bss_order.order_name,name from workstation_order left join bss_order on workstation_order.order_id = bss_order.order_id left join workstation_info on workstation_order.workstation_id = workstation_info.id where workstation_order.id = ?";
+        Map<String,Object> map = simpleJDBC.selectForMap(sql,id);
+        //GRPC通信，action为3和1，先删除之前的账号和密码，然后新增
+        Result r = sendMessageToZjServer(3, Integer.parseInt(map.get("workstation_id").toString()),map.get("operator_name").toString(),map.get("workstation_password").toString(),map.get("start_time").toString(),map.get("end_time").toString());
+        if(r.getCode() != 200) return r;
 
+        sql = "update workstation_order set workstation_id=?,time=? where id=?";
         int res = simpleJDBC.update(sql, new_id, LocalDateTime.now(), id);
+
+        r = sendMessageToZjServer(1, Integer.parseInt(new_id),map.get("operator_name").toString(),map.get("workstation_password").toString(),map.get("start_time").toString(),map.get("end_time").toString());
+        if(r.getCode() != 200) return r;
         if(res!=0){
-            sql = "select * from workstation_order where id = ?";
-            Map<String,Object> map = simpleJDBC.selectForMap(sql,id);
             maintenanceRecord("changeWorkstation",map.get("workstation_id").toString(),map.get("order_id").toString(),map.get("operator_id").toString());
             return  new Result(200,"success","专机/工位修改成功");
         }
@@ -182,12 +189,14 @@ public class WorkstationDistributionService {
         int rSet = 0;
         for (int i = 0; i < ids.length; i++) {
             Integer id = Integer.parseInt(ids[i]);
-            String sql = "select * from workstation_order where id = ?";
+            String sql = "select workstation_order.*, bss_order.order_num,bss_order.order_name,name from workstation_order left join bss_order on workstation_order.order_id = bss_order.order_id left join workstation_info on workstation_order.workstation_id = workstation_info.id where workstation_order.id = ?";
             Map<String,Object> map = simpleJDBC.selectForMap(sql,id);
+            //GRPC通信，action为3和1，先删除之前的账号和密码，然后新增
+            Result r = sendMessageToZjServer(3, Integer.parseInt(map.get("workstation_id").toString()),map.get("operator_name").toString(),map.get("workstation_password").toString(),map.get("start_time").toString(),map.get("end_time").toString());
+            if(r.getCode() != 200) return r;
             maintenanceRecord("deleteWorkstationOrderRecord",map.get("workstation_id").toString(),map.get("order_id").toString(),map.get("operator_id").toString());
             sql = "delete from workstation_order where id=?";
             rSet = simpleJDBC.update(sql, id);
-
         }
         if (rSet != 0) {
             return new Result("success", 200, "删除成功");
@@ -195,6 +204,12 @@ public class WorkstationDistributionService {
         return new Result("error", 100, "删除失败");
     }
 
+    //工位校验
+    public String getWorkstationIp(Integer order_id,String operator_id) {
+        String sql = "select ip from workstation_order left join workstation_info on workstation_order.workstation_id = workstation_info.id where order_id = ? and operator_id = ?";
+        String ip = simpleJDBC.selectForOneString(sql,order_id, operator_id);
+        return ip;
+    }
     private static int generateRandomNumberInRange(int n) {
         if (n < 0) {
             throw new IllegalArgumentException("生成随机数错误，输入值n must be a positive integer");
@@ -219,5 +234,12 @@ public class WorkstationDistributionService {
         sql = "UPDATE workstation_order SET status = 2 WHERE start_time < ? and end_time > ?";
         simpleJDBC.update(sql,LocalDateTime.now(),LocalDateTime.now());
         return true;
+    }
+
+    private Result sendMessageToZjServer(int action, int zjId, String account, String password,String start_time, String end_time){
+        Result result = new Result(200,"success");
+//        ZjWebAdminClient zjWebAdminClient = new ZjWebAdminClient();
+//        result = zjWebAdminClient.sendMessageToZjServer(action,zjId,account,password,start_time,end_time);
+        return result;
     }
 }

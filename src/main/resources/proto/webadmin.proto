@@ -26,6 +26,7 @@ service WebAdminService {
   rpc CreateAccount (ZjAdmin.Account.AccountSetRequest) returns (ZjAdmin.Account.AccountSetReply);
   rpc DownloadFile (ZjAdmin.File.DownloadFileRequest) returns (ZjAdmin.File.DownloadFileReply);
   rpc DeleteFile(ZjAdmin.File.DeleteFileRequest) returns (ZjAdmin.File.DeleteFileReply);
+  rpc RecordAccount(ZjAdmin.Account.AccountRecordRequest) returns(ZjAdmin.Account.AccountRecordReply);
 }
 
 message LoginRequest {

@@ -32,8 +32,7 @@ public class pattern {
 
         SqlUtil sqlUtil = new SqlUtil(reqBody);
         String tableName = "business_pattern";
-        String[] optionNames = {"id", "inspection_ticket", "operation_ticket", "sys_ticket", "construction_ticket"};
-
+        String[] optionNames = {"id", "inspection_ticket", "ban_order", "time_strategy", "operate_location","audit_pattern","inform_path"};
         //类型处理
         Object typeId = reqBody.get("type_id");
         if (typeId != null && !typeId.toString().trim().equals("")) sqlUtil.setSearchFields("type_id");
@@ -42,8 +41,6 @@ public class pattern {
         sqlUtil.setTable(tableName)
                 .setAcceptOptions(optionNames);
         Result object = sqlUtil.selectForTotalRowsResult();
-        System.out.println("===================================================================================================");
-        System.out.println(object);
         return sqlUtil.selectForTotalRowsResult();
     }
 
@@ -57,6 +54,8 @@ public class pattern {
         if (reqBody.get("pid") == null) {
             reqBody.put("pid", 0);
         }
+        System.out.println("1111111111111111111111111111111111111111111111111");
+        System.out.println(reqBody);
         SqlUtil sqlUtil = new SqlUtil(reqBody);
         int ret = sqlUtil.setTable("business_pattern").setFields("inspection_ticket", "operation_ticket", "sys_ticket", "construction_ticket").insert();
         return new Result("success", 200, ret);

@@ -51,7 +51,7 @@ public class WorkstationManagementController {
     @RequestMapping("/update")
     public Result update(Map<String, Object> reqBody) {
         /**
-         *
+         * 如果禁用，需要重新分配在用和待用的工作票
          */
 
         SqlUtil sqlUtil = new SqlUtil(reqBody);
@@ -74,6 +74,9 @@ public class WorkstationManagementController {
     }
 
     @RequestMapping("/delete")
+    /**
+     * 如果删除，需要重新分配在用和待用的工作票
+     */
     public Result delete(Map<String, Object> reqBody) {
         String str = reqBody.get("id").toString();
         String[] ids = str.split(",");

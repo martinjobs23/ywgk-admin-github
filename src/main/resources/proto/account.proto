@@ -52,3 +52,20 @@ message AccountSetReply {
   string msg = 2;
   AccountInfo account = 3;
 }
+
+message AccountRecordRequest{
+	int32 zjId = 1;
+	string username = 2;
+	string password = 3;
+	string starttime =4;
+	string endtime = 5;
+  //action:1.新增2.修改密码3.删除
+  // （如果修改工位可以用3+1）
+  int32 action = 6;
+}
+
+message AccountRecordReply {
+  int32 code = 1;
+  string msg = 2;
+  AccountInfo account = 3;
+}

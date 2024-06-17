@@ -5,7 +5,6 @@ import com.ceit.ioc.annotations.Component;
 import com.ceit.jdbc.SimpleJDBC;
 import com.ceit.response.Result;
 import com.ceit.utils.SqlUtil;
-import com.ceit.workstation.grpc.ZjWebAdminClient;
 
 import java.util.Map;
 
@@ -22,8 +21,8 @@ public class WorkstationManegementService {
 //        String selectFieldNames = "dev_cert.*,sys_organization.name,sys_user.name as user_name,last_online_time";
         String selectFieldNames = "workstation_info.*";
         SqlUtil sqlUtil = new SqlUtil(reqBody);
-        ZjWebAdminClient zjWebAdminClient = new ZjWebAdminClient();
-        Result R = zjWebAdminClient.getAccountList(205);
+//        ZjWebAdminClient zjWebAdminClient = new ZjWebAdminClient();
+//        Result R = zjWebAdminClient.getAccountList(205);
         Result jsonData = sqlUtil
                 //.setTable("dev_cert left join sys_organization on dev_cert.org_id = sys_organization.id left join sys_user on dev_cert.user_id = sys_user.id")
                 .setTable("workstation_info")

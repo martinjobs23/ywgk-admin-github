@@ -3,9 +3,7 @@ package com.ceit.workstation.grpc;
 import ZjAdmin.Account.*;
 import ZjAdmin.File.DownloadFileReply;
 import ZjAdmin.File.DownloadFileRequest;
-import ZjAdmin.WebAdmin.LoginReply;
-import ZjAdmin.WebAdmin.LoginRequest;
-import ZjAdmin.WebAdmin.WebAdminServiceGrpc;
+import ZjAdmin.WebAdmin.*;
 import com.ceit.bootstrap.ConfigLoader;
 import com.ceit.response.Result;
 import io.grpc.ConnectivityState;
@@ -163,6 +161,75 @@ public class ZjWebAdminClient {
         return result;
     }
 
+    //记录编辑后的内容通知zjserver
+    public static Result sendMessageToZjServer(int action, int zjId, String account, String password,String starttime, String endtime) {
+
+        //检测是否成功连接
+        Result result = connectGrpcServer();
+        if(result.getCode()!=200)
+            return result;
+
+        try {
+
+            //发送请求
+            AccountRecordRequest request = AccountRecordRequest.newBuilder()
+                    .setZjId(zjId)
+                    .setUsername(account)
+                    .setPassword(password)
+                    .setStarttime(starttime)
+                    .setEndtime(endtime)
+                    .setAction(action)
+                    .build();
+
+            AccountRecordReply reply = blockingStub.recordAccount(request);
+            if(reply.getCode()!=200) {
+                channel.shutdownNow();
+                return new Result(reply.getCode(),reply.getMsg());
+            }
+
+            //结果处理
+            result.setMsg("创建专机"+ zjId+"账号成功");
+            result.setData(reply.getAccount());
+        }
+        catch (Exception err){
+            err.printStackTrace();
+            return new Result(500,"错误:"+err.getMessage());
+        }
+
+        return result;
+    }
+
+    public static Result findOnlineZjList(int action, int zjId, String account, String password,String starttime, String endtime) {
+
+        //检测是否成功连接
+        Result result = connectGrpcServer();
+        if(result.getCode()!=200)
+            return result;
+
+        try {
+
+            //发送请求
+            ZjListRequest request = ZjListRequest.newBuilder()
+                    .setOnlyOnline(true)
+                    .build();
+
+            ZjListReply reply = blockingStub.getZjList(request);
+            if(reply.getCode()!=200) {
+                channel.shutdownNow();
+                return new Result(reply.getCode(),reply.getMsg());
+            }
+
+            //结果处理
+            result.setMsg("在线专机列表查找成功");
+            //result.setData(reply.getZjList());
+        }
+        catch (Exception err){
+            err.printStackTrace();
+            return new Result(500,"错误:"+err.getMessage());
+        }
+
+        return result;
+    }
     //下载文件，如果成功登录目标机成功，开始下载，不代表已经下载完毕
     public static Result downloadFile(DownloadFileRequest request) {
 

@@ -11,9 +11,11 @@ import com.ceit.ioc.annotations.RequestMapping;
 import com.ceit.jdbc.SimpleJDBC;
 import com.ceit.response.Result;
 import com.ceit.utils.SqlUtil;
+import com.ceit.workstation.service.WorkstationDistributionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.text.ParseException;
@@ -26,6 +28,8 @@ public class OrderTaskController {
     @Autowired
     private SimpleJDBC simpleJDBC;
     private static final Logger logger= LoggerFactory.getLogger(OrderTaskController.class);
+    @Autowired
+    private WorkstationDistributionService workstationDistributionService;
 
     //  查询 我的审批任务
     @RequestMapping("/getOrderList")
@@ -80,11 +84,32 @@ public class OrderTaskController {
 
 //  是否能够运维
     @RequestMapping("/permission")
-    public Result checkPermission(Map<String, Object> reqBody){
-        String orderId = (String) reqBody.get("orderid");
-        String deviceId = (String) reqBody.get("deviceId");
-        String proto = (String) reqBody.get("protocol");
+    public Result checkPermission(Map<String, Object> reqBody, HttpServletRequest request){
 
+//        获取访问当前系统的浏览器所在电脑IP，用于判断是否是检修专区分配的电脑
+        String ip = request.getHeader("x-forwarded-for");
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_CLIENT_IP");
+        }
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
+        }
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+
+
+        int orderId = (Integer) reqBody.get("order_id");
+        System.out.println(workstationDistributionService);
+        String workstationIp = workstationDistributionService.getWorkstationIp((Integer) reqBody.get("order_id"), UserService.getCurrentUserId());
+        if(workstationIp==null)
+            return new Result("非本人可运维，请查正", 200, "vab-hey-message-error");
         //检查时间策略
         SqlUtil sqlUtil = new SqlUtil(reqBody)
                 .setTable("bss_order")
@@ -94,11 +119,15 @@ public class OrderTaskController {
         String start_time=reqBody.get("start_time").toString();
         String end_time=reqBody.get("end_time").toString();
         boolean between_time = isBetweenBeginAndEnd_time((String) start_time, (String) end_time);
+        boolean isWorkstationIp=workstationIp.equals(ip);
         if (!reqBody.get("status").equals("5")) {
             return new Result("工作票待许可", 200, "vab-hey-message-error");
         }
          else if (!between_time ) {
             return new Result("不在运维时间段内", 200, "vab-hey-message-error");
+        }
+         else if (!isWorkstationIp && Integer.parseInt((String) reqBody.get("order_type"))==1) {
+            return new Result("检修票需要在分配运维专机运维，此终端非分配运维专机，无法运维", 200, "vab-hey-message-error");
         }
         return new Result(200, "success", "vab-hey-message-success");
     }
